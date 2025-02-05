@@ -1,0 +1,188 @@
+# Visual Studio Code
+
+# TSA Project
+# Imports time and math to be used within the code
+import time
+import math
+
+# Declare volume and crop_type as global variables, to be used in other classes
+volume = 0 
+crop_type = None
+moisture = 62
+
+# These are the optimal moisture levels for the shallow, medium, and deep rooted crops
+shallow_optimal = 60 <= moisture <= 80 # These types of crops rely on the top inches of soil for moisture
+medium_optimal = 50 <= moisture <= 70 # These types of crops don't rely that heavily on the top inches of soil and can access the deeper parts of the soil
+deep_optimal = 40 <= moisture <= 60 # These types of crops can access moisture for way deeper in the soil
+
+class FieldVolumeCalculator:
+    def __init__(self):
+        pass
+
+    # This function is used to make sure when the user inputs a number it is positive and doesn't have letters in it
+    def get_positive_input(self, prompt):
+        while True:
+            try:
+                user_input = input(prompt)
+                value = float(user_input)
+                if value > 0:
+                    return value
+                else:
+                    print("Please enter a number greater than 0.")
+            except ValueError:
+                print("Invalid input. Please enter a valid number (no letters or special characters).")
+
+    # Calculates the volume for a rectangular field
+    def calculate_volume_rectangular(self, length, width, depth):
+        area = length * width
+        return area * depth
+    
+    # Calculates the volume for a circular field
+    def calculate_volume_circular(self, radius, depth):
+        area = math.pi * (radius ** 2)
+        return area * depth
+
+    # Asks the User for their crop type, and asks them for their optimal moisture depth based on their crop type
+    def get_moisture_depth_for_crop(self, crop_type):
+
+        if crop_type == "shallow":
+            # Optimal mositure depth for shallow rooted crops is 6 - 12 inches
+            while True:
+                time.sleep(0.6)
+                depth = self.get_positive_input("Enter your optimal moisture depth (in inches) between 6 and 12 inches: ")
+                if 6 <= depth <= 12:
+                    time.sleep(0.6)
+                    return depth
+                else:
+                    print("Please enter a valid depth between 6 and 12 inches.")
+
+        elif crop_type == "medium":
+            # Optimal moisture depth for medium rooted crops is 12 - 24 inches
+            while True:
+                time.sleep(0.6)
+                depth = self.get_positive_input("Enter your optimal moisture depth (in inches) between 12 and 24 inches: ")
+                if 12 <= depth <= 24:
+                    time.sleep(0.6)
+                    return depth
+                else:
+                    print("Please enter a valid depth between 12 and 24 inches.")
+
+        elif crop_type == "deep":
+            # Optimal mositure depth for deep rooted crops is 24 - 48 inches
+            while True:
+                time.sleep(0.6)
+                depth = self.get_positive_input("Enter your optimal moisture depth (in inches) between 24 and 48 inches: ")
+                if 24 <= depth <= 48:
+                    time.sleep(0.6)
+                    return depth
+                else:
+                    print("Please enter a valid depth between 24 and 48 inches.")
+
+    def calculate_field_volume(self):
+        # Main function for determining the volume of the users field
+        global volume
+        time.sleep(0.6)
+        print("Please enter the following dimensions of your field to calculate the volume in cubic feet.")
+        time.sleep(0.6)
+
+        # Asks the user for their field type
+        while True:
+            # Puts the users response into lowercase to avoid capilazation issues
+            field_type = input("What type of field do you have? (rectangular or circular): ").lower()
+            if field_type in ["rectangular", "circular"]:
+                time.sleep(0.6)
+                break
+            else:
+                print("Invalid field type. Please enter rectangular or circular.")
+
+        # Asks the user for their crop type
+        while True:
+            global crop_type
+            # Puts the users response into lowercase to avoid capilazation issues
+            crop_type = input("What type of crop are you growing? (shallow, medium, or deep): ").lower()
+            if crop_type in ["shallow", "medium", "deep"]:
+                time.sleep(0.6)
+                break
+            else:
+                print("Invalid crop type. Please enter shallow, medium, or deep.")
+
+        # Converts the users optimal moisture depth from inches to feet
+        depth_in_inches = self.get_moisture_depth_for_crop(crop_type)
+        depth_in_feet = depth_in_inches / 12
+
+        # Asks for the dimensions of the users rectangular field
+        if field_type == "rectangular":
+            length = self.get_positive_input("Enter the length of your field in feet: ")
+            time.sleep(0.6)
+            width = self.get_positive_input("Enter the width of your field in feet: ")
+            volume = self.calculate_volume_rectangular(length, width, depth_in_feet)
+
+        # Asks for the dimension of the users circular field
+        elif field_type == "circular":
+            radius = self.get_positive_input("Enter the radius of your field in feet: ")
+            volume = self.calculate_volume_circular(radius, depth_in_feet)
+
+        time.sleep(1)
+        return f"The volume of your field is {round(volume, 3)} cubic feet."
+
+class WaterCalculator:
+    def __init__(self):
+        # Does the calculuation for how many gallons of water are in the users field
+        # ginw = gallons in water
+        # ainw = actually in water
+        self.ginw = volume * 7.48
+        self.ainw = self.ginw * (moisture / 100)
+
+    def how_much_water(self):
+        # Tells the user how many gallons of water are in their soil
+        time.sleep(0.6)
+        return f"You have {round(self.ainw, 3)} gallons of water in your soil"
+
+    def optimal_range(self):
+        if crop_type == "shallow":
+            # Gets the optimal amount of water in soil, by putting the mositure level in the middle of the range
+            # oinw = optimal in water
+            # ginw = gallons in water
+            self.oinw = self.ginw * .7
+            # Puts the minimum the moisutre level could be
+            # Another way of writing moisture < 60
+            minimum = 60
+            # Assigning the variable shallow_optimal to optimal
+            optimal = shallow_optimal
+        elif crop_type == "medium":
+            self.oinw = self.ginw * .6
+            minimum = 50
+            optimal = medium_optimal
+        elif crop_type == "deep":
+            self.oinw = self.ginw * .5
+            minimum = 40
+            optimal = deep_optimal
+
+        # Check if moisture is within the optimal range
+        if optimal == True:
+            time.sleep(0.6)
+            return f"Your moisture level lies within the optimal moisture range."
+        
+        # Determine if water needs to be added or subtracted
+        # If the moisture level is not in the range
+        if moisture < minimum:
+            # minw = more in water
+            self.minw = self.oinw - self.ainw
+            time.sleep(0.6)
+            return f"Your moisture level lies below the optimal moisture range. You need to add {round(self.minw, 3)} gallons of water to your field."
+        # If the moisture level is above the range
+        else:
+            # sinw = subtract in water
+            self.sinw = self.ainw - self.oinw
+            time.sleep(0.6)
+            return f"Your moisture level lies above the optimal moisture range. You need to subtract {round(self.sinw, 3)} gallons of water from your field."
+
+# This is the main function   
+def main():
+    print(FieldVolumeCalculator().calculate_field_volume())
+    water_calculator = WaterCalculator()
+    print(water_calculator.how_much_water())
+    print(water_calculator.optimal_range())
+
+# Runs the code
+main()
